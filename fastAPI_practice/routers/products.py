@@ -1,7 +1,8 @@
 from fastapi import APIRouter
 
+#se especifica la ruta que se va a compartir en la aplicación principal y sus funciones
 router = APIRouter(prefix="/products", tags= ["products"],
-                responses={404:{"Alert":"not found"}})
+                    responses={404:{"Alert":"not found"}})
 
 products_list = ["producto 1" , "producto 2", "producto 3", "producto 4", "producto 5"]
 
