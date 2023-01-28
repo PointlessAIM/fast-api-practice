@@ -1,10 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
-app=FastAPI()
+router=APIRouter(prefix="/ba", tags=["JWT authentication"], responses={404:{"Alert":"not found"}})
 
 oauth2 = OAuth2PasswordBearer(tokenUrl="/login")
+#OAuth2PasswordBearer: nos permite definir un esquema de autenticación basado en tokens
+#tokenUrl: ruta de acceso para obtener el token de autenticación
+#Depends: nos permite definir dependencias entre funciones y clases
 
 #define los datos que representan a un usuario en el sistema
 class User(BaseModel):
@@ -43,11 +46,12 @@ def search_user_db(username: str):
 #Búsqueda del usuario como objeto de clase
 def search_user(username:str):
     if username in users_db:
-        return UserDB(**users_db[username])
+        return User(**users_db[username])
 
 #Recibe como parámetro un token de autenticación para validar la interacción del usuario con el sistema
 #así como reconocer quién es el usuario actual
 async def current_user(token:str=Depends(oauth2)):
+
     user = search_user(token)
 
     if not user:
@@ -64,16 +68,18 @@ async def current_user(token:str=Depends(oauth2)):
     return user
 
 #login: usamos un objeto tipo OAuth2 = Depends() para obtener los datos de inicio de sesión del usuario
-# a través del parámetro form
-@app.post("/login")
+# a través del parámetro form. Nos aseguramos de que el usuario exista y que la contraseña coincida
+# con la que está en la base de datos
+@router.post("/login")
 async def login (form: OAuth2PasswordRequestForm = Depends()):
+
     user_db = users_db.get(form.username)
     if not user_db:
         raise HTTPException(
             status_code=400, detail="revisa tus datos de acceso, seguro que los escribiste bien?"
         )
     
-    user = search_user(form.username)
+    user = search_user_db(form.username)
 
     if not form.password == user.password:
         raise HTTPException(
@@ -83,7 +89,7 @@ async def login (form: OAuth2PasswordRequestForm = Depends()):
     return {"access_token": user.username , "token_type": "bearer"}
 
 
-@app.get("/users/me")
+@router.get("/users/me")
 #muestra los datos del usuario actual
 async def me(user:User = Depends(current_user)):
     return user

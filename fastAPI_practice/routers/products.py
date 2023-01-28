@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 
 #se especifica la ruta que se va a compartir en la aplicación principal y sus funciones
+#prefix: ruta que se va a compartir
+#tags: etiquetas que se van a mostrar en la documentación
+#responses: respuestas que se van a mostrar en la documentación
 router = APIRouter(prefix="/products", tags= ["products"],
                     responses={404:{"Alert":"not found"}})
 
